@@ -18,32 +18,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Prepare Android Project
-      run: |
-        # Ensure standard directories exist
-        mkdir -p app/src/main/java app/src/main/res
-        
-        # Move source files safely if they are in root
-        find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/ \; 2>/dev/null || true
-        find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/ \; 2>/dev/null || true
-        
-        if [ -f "build.gradle" ] && [ ! -f "app/build.gradle" ]; then
-          mv build.gradle app/
-        fi
-        
-        if [ ! -f "settings.gradle" ]; then
-          echo "include ':app'" > settings.gradle
-        fi
-
-    - name: Build APK without strict plugin checks
+    - name: Build with Gradle
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
-        ./gradlew assembleDebug || ./gradlew app:assembleDebug
-        
+        ./gradlew assembleDebug || ./gradlew build --continue
+
     - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
+        path: |
+          build/outputs/apk/debug/app-debug.apk
+          app/build/outputs/apk/debug/app-debug.apk
+          
