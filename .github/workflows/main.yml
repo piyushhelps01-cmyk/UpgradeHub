@@ -18,19 +18,35 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Generate Fresh Gradle Wrapper and Build
+    - name: Force Create App Directory and Organize Files
       run: |
-        # Purane faulty gradlew files ko hata kar naya wrapper generate kar rahe hain
-        rm -rf gradle gradlew gradlew.bat
+        # Sabse pehle app folder aur uske andar src/main/java bana rahe hain taaki Gradle roye na
+        mkdir -p app/src/main/java
+        mkdir -p app/src/main/res
+        
+        # Jitni bhi .kt files bahar padi hain unhe app/src/main/java me bhej rahe hain
+        find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/ \; 2>/dev/null || true
+        
+        # Jitni bhi .xml files bahar padi hain unhe app/src/main/res me bhej rahe hain
+        find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/ \; 2>/dev/null || true
+        
+        # Agar root me build.gradle hai toh use app folder ke andar move kar rahe hain
+        if [ -f "build.gradle" ]; then
+          mv build.gradle app/
+        fi
+        
+        # Ekdam sahi settings.gradle file bana rahe hain
+        echo "include ':app'" > settings.gradle
+
+    - name: Build APK with Gradle Wrapper
+      run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
-        ./gradlew assembleDebug || ./gradlew build --continue
+        ./gradlew assembleDebug
 
     - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: |
-          build/outputs/apk/debug/app-debug.apk
-          app/build/outputs/apk/debug/app-debug.apk
-          
+        path: app/build/outputs/apk/debug/app-debug.apk
+        
