@@ -18,30 +18,29 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android Project Layout
+    - name: Prepare Android Project
       run: |
-        # Ek standard android app folder structure bana rahe hain
+        # Ensure standard directories exist
         mkdir -p app/src/main/java app/src/main/res
         
-        # Jitni bhi kotlin aur xml files hain unhe sahi jagah bhej rahe hain
-        mv *.kt app/src/main/java/ 2>/dev/null || true
-        mv *.xml app/src/main/res/ 2>/dev/null || true
+        # Move source files safely if they are in root
+        find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/ \; 2>/dev/null || true
+        find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/ \; 2>/dev/null || true
         
-        # Agar bahar build.gradle ya settings.gradle hai toh unhe set kar rahe hain
-        if [ -f "build.gradle" ]; then mv build.gradle app/; fi
-
-    - name: Create basic settings.gradle if missing
-      run: |
+        if [ -f "build.gradle" ] && [ ! -f "app/build.gradle" ]; then
+          mv build.gradle app/
+        fi
+        
         if [ ! -f "settings.gradle" ]; then
           echo "include ':app'" > settings.gradle
         fi
 
-    - name: Setup Gradle Wrapper and Build
+    - name: Build APK without strict plugin checks
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
-        ./gradlew assembleDebug
-
+        ./gradlew assembleDebug || ./gradlew app:assembleDebug
+        
     - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
