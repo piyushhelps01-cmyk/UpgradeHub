@@ -18,9 +18,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Clean Project & Build
+    - name: Complete Fresh Setup and Build
       run: |
-        # 1. Clean old files
+        # 1. Clean everything
         rm -rf gradle gradlew gradlew.bat build.gradle settings.gradle app 2>/dev/null || true
 
         # 2. Create standard Android folders
@@ -124,8 +124,10 @@ jobs:
 
         echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
 
-        # 8. Build using gradle directly without wrapper generation
-        gradle assembleDebug
+        # 8. Generate Wrapper and Build using Gradle 7.5 (Fully stable with 7.4.2 plugins)
+        gradle wrapper --gradle-version 7.5
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
