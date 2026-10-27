@@ -18,59 +18,23 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create Perfect Android Structure
+    - name: Grant Execute Permission
+      run: chmod +x gradlew || true
+
+    - name: Build APK
       run: |
-        # Ekdam sahi Android directory structure bana rahe hain
-        mkdir -p app/src/main/java/com/upgradehub/app
-        mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/values
-        
-        # Jitni bhi .kt files hain unhe java package folder me bhej rahe hain
-        mv *.kt app/src/main/java/com/upgradehub/app/ 2>/dev/null || true
-        
-        # Jitni bhi xml files hain unhe res folders me bhej rahe hain
-        mv *.xml app/src/main/res/layout/ 2>/dev/null || true
-        
-        # Agar root me build.gradle hai toh use app folder me move kar rahe hain
-        if [ -f "build.gradle" ]; then
-          mv build.gradle app/
-        fi
-        
-        # Sahi settings.gradle file bana rahe hain
-        echo "include ':app'" > settings.gradle
-        
-        # Manifest file agar nahi hai toh ek basic manifest bana dete hain taaki build na ruke
-        if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.upgradehub.app">
-    <application
-        android:allowBackup="true"
-        android:label="UpgradeHub"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-EOF
+        if [ -f "gradlew" ]; then
+          ./gradlew assembleDebug
+        else
+          gradle wrapper --gradle-version 8.5
+          ./gradlew assembleDebug
         fi
 
-    - name: Build Debug APK
-      run: |
-        gradle wrapper --gradle-version 8.5
-        chmod +x gradlew
-        ./gradlew assembleDebug
-
-    - name: Upload APK File
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
+        path: |
+          build/outputs/apk/debug/app-debug.apk
+          app/build/outputs/apk/debug/app-debug.apk
+          
