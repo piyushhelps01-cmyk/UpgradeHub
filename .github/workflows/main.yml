@@ -18,22 +18,21 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create App Folder & Move Files
+    - name: Setup Android Project Structure
       run: |
         mkdir -p app/src/main
-        # Sabhi Kotlin aur Layout files ko app folder ke andar bhej rahe hain
-        find . -maxdepth 1 ! -name '.' ! -name '.github' ! -name 'app' -exec mv {} app/ \;
-        ls -R app
-
-    - name: Fix Gradle Wrapper
-      run: |
-        cd app && gradle wrapper --gradle-version 8.5
+        # Sirf Kotlin, Gradle aur XML files ko app folder me bhej rahe hain
+        mv *.kt app/src/main/ 2>/dev/null || true
+        mv *.xml app/src/main/ 2>/dev/null || true
+        mv build.gradle app/ 2>/dev/null || true
+        mv proguard-rules.pro app/ 2>/dev/null || true
+        ls -la app
 
     - name: Grant execute permission for gradlew
-      run: chmod +x app/gradlew
+      run: chmod +x gradlew
 
     - name: Build Debug APK
-      run: cd app && ./gradlew assembleDebug
+      run: ./gradlew assembleDebug
 
     - name: Upload APK File
       uses: actions/upload-artifact@v4
