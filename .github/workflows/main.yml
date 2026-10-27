@@ -18,37 +18,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create App Directory & Move Files Properly
-      run: |
-        # Sabse pehle app folder aur uske andar standard android folders bana rahe hain
-        mkdir -p app/src/main/java app/src/main/res
-        
-        # Jitni bhi .kt (Kotlin) files hain unhe java folder me bhej rahe hain
-        mv *.kt app/src/main/java/ 2>/dev/null || true
-        
-        # Jitni bhi .xml files hain unhe res folder me bhej rahe hain
-        mv *.xml app/src/main/res/ 2>/dev/null || true
-        
-        # Agar bahar build.gradle hai toh use app folder ke andar daal rahe hain
-        if [ -f "build.gradle" ]; then
-          mv build.gradle app/
-        fi
-        
-        # Ensure settings.gradle is present and correctly references :app
-        echo "include ':app'" > settings.gradle
-        
-        echo "=== CHECKING DIRECTORY STRUCTURE ==="
-        ls -R app
-
-    - name: Build Debug APK with Gradle
+    - name: Build Project Directly
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug || ./gradlew build --continue
 
     - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
+        path: |
+          build/outputs/apk/debug/app-debug.apk
+          app/build/outputs/apk/debug/app-debug.apk
+          
