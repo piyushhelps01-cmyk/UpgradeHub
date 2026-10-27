@@ -18,35 +18,127 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Force Create App Directory and Organize Files
+    - name: Build Professional Android Structure & Fix All Issues
       run: |
-        # Sabse pehle app folder aur uske andar src/main/java bana rahe hain taaki Gradle roye na
-        mkdir -p app/src/main/java
-        mkdir -p app/src/main/res
-        
-        # Jitni bhi .kt files bahar padi hain unhe app/src/main/java me bhej rahe hain
-        find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/ \; 2>/dev/null || true
-        
-        # Jitni bhi .xml files bahar padi hain unhe app/src/main/res me bhej rahe hain
-        find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/ \; 2>/dev/null || true
-        
-        # Agar root me build.gradle hai toh use app folder ke andar move kar rahe hain
-        if [ -f "build.gradle" ]; then
-          mv build.gradle app/
-        fi
-        
-        # Ekdam sahi settings.gradle file bana rahe hain
+        # 1. Clean up any broken or old gradle files in root
+        rm -rf gradle gradlew gradlew.bat build.gradle settings.gradle app 2>/dev/null || true
+
+        # 2. Create standard Android Studio project layout from scratch
+        mkdir -p app/src/main/java/com/upgradehub/app
+        mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/values
+
+        # 3. Safely move user's Kotlin and XML files if they exist in root
+        # (If no files are found, it won't crash due to || true)
+        find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/com/upgradehub/app/ \; 2>/dev/null || true
+        find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/layout/ \; 2>/dev/null || true
+
+        # 4. Automatically generate a clean root settings.gradle
         echo "include ':app'" > settings.gradle
 
-    - name: Build APK with Gradle Wrapper
+        # 5. Automatically generate a clean app/build.gradle with essential dependencies
+        cat << 'EOF' > app/build.gradle
+        plugins {
+            id 'com.android.application'
+            id 'org.jetbrains.kotlin.android'
+        }
+
+        android {
+            namespace 'com.upgradehub.app'
+            compileSdk 34
+
+            defaultConfig {
+                applicationId "com.upgradehub.app"
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName "1.0"
+            }
+
+            buildTypes {
+                release {
+                    minifyEnabled false
+                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                }
+            }
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+            kotlinOptions {
+                jvmTarget = '17'
+            }
+            buildFeatures {
+                compose true
+            }
+            composeOptions {
+                kotlinCompilerExtensionVersion '1.5.1'
+            }
+        }
+
+        dependencies {
+            implementation 'androidx.core:core-ktx:1.12.0'
+            implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+            implementation 'androidx.activity:activity-compose:1.8.2'
+            implementation platform('androidx.compose:compose-bom:2023.08.00')
+            implementation 'androidx.compose.ui:ui'
+            implementation 'androidx.compose.ui:ui-graphics'
+            implementation 'androidx.compose.ui:ui-tooling-preview'
+            implementation 'androidx.compose.material3:material3'
+            implementation 'androidx.room:room-runtime:2.6.1'
+            annotationProcessor 'androidx.room:room-compiler:2.6.1'
+        }
+        EOF
+
+        # 6. Generate root build.gradle for Gradle 8+
+        cat << 'EOF' > build.gradle
+        plugins {
+            id 'com.android.application' version '8.2.0' apply false
+            id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+        }
+        subprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        EOF
+
+        # 7. Generate AndroidManifest.xml so Gradle never complains about missing manifest
+        if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            package="com.upgradehub.app">
+            <application
+                android:allowBackup="true"
+                android:label="UpgradeHub"
+                android:supportsRtl="true"
+                android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
+        fi
+
+        # 8. Create local.properties to prevent SDK path errors
+        echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
+
+    - name: Initialize Gradle Wrapper & Build APK
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
         ./gradlew assembleDebug
 
-    - name: Upload APK File
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
+        name: upgradehub-debug-apk
         path: app/build/outputs/apk/debug/app-debug.apk
         
