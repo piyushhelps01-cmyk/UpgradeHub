@@ -1,0 +1,6 @@
+{
+  "name": "UpgradeHub",
+  "description": "UpgradeHub - Complete AI Learning Platform: Batch & No-Batch Modes, AI Mentor, Visual Learning, Snap & Solve, CBT Test Engine, Planner, Tracker & Campus Hub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
