@@ -18,19 +18,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Grant Execute Permission
-      run: chmod +x gradlew || true
-
-    - name: Build APK
+    - name: Generate Fresh Gradle Wrapper and Build
       run: |
-        if [ -f "gradlew" ]; then
-          ./gradlew assembleDebug
-        else
-          gradle wrapper --gradle-version 8.5
-          ./gradlew assembleDebug
-        fi
+        # Purane faulty gradlew files ko hata kar naya wrapper generate kar rahe hain
+        rm -rf gradle gradlew gradlew.bat
+        gradle wrapper --gradle-version 8.5
+        chmod +x gradlew
+        ./gradlew assembleDebug || ./gradlew build --continue
 
-    - name: Upload APK
+    - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
