@@ -18,9 +18,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Project & Repositories
+    - name: Setup Project & Compatible Gradle Version
       run: |
-        # 1. Clean old junk
+        # 1. Clean old files
         rm -rf gradle gradlew gradlew.bat build.gradle settings.gradle app 2>/dev/null || true
 
         # 2. Create standard Android folders
@@ -32,7 +32,7 @@ jobs:
         find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/com/upgradehub/app/ \; 2>/dev/null || true
         find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/layout/ \; 2>/dev/null || true
 
-        # 4. Create settings.gradle with proper repositories
+        # 4. Create settings.gradle
         cat << 'EOF' > settings.gradle
         pluginManagement {
             repositories {
@@ -52,11 +52,11 @@ jobs:
         include ':app'
         EOF
 
-        # 5. Create root build.gradle
+        # 5. Create root build.gradle with compatible AGP version 8.1.0
         cat << 'EOF' > build.gradle
         plugins {
-            id 'com.android.application' version '8.2.0' apply false
-            id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+            id 'com.android.application' version '8.1.0' apply false
+            id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
         }
         EOF
 
@@ -96,7 +96,7 @@ jobs:
                 compose true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion '1.5.1'
+                kotlinCompilerExtensionVersion '1.4.7'
             }
         }
 
@@ -136,9 +136,9 @@ jobs:
 
         echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
 
-    - name: Build Debug APK
+    - name: Build Debug APK with Gradle 8.0
       run: |
-        gradle wrapper --gradle-version 8.5
+        gradle wrapper --gradle-version 8.0
         chmod +x gradlew
         ./gradlew assembleDebug
 
