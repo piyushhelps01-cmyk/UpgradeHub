@@ -18,7 +18,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Project & Compatible Gradle Version
+    - name: Setup Clean Project & Build
       run: |
         # 1. Clean old files
         rm -rf gradle gradlew gradlew.bat build.gradle settings.gradle app 2>/dev/null || true
@@ -52,11 +52,11 @@ jobs:
         include ':app'
         EOF
 
-        # 5. Create root build.gradle with compatible AGP version 8.1.0
+        # 5. Create root build.gradle
         cat << 'EOF' > build.gradle
         plugins {
-            id 'com.android.application' version '8.1.0' apply false
-            id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
+            id 'com.android.application' version '7.4.2' apply false
+            id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
         }
         EOF
 
@@ -69,12 +69,12 @@ jobs:
 
         android {
             namespace 'com.upgradehub.app'
-            compileSdk 34
+            compileSdk 33
 
             defaultConfig {
                 applicationId "com.upgradehub.app"
                 minSdk 24
-                targetSdk 34
+                targetSdk 33
                 versionCode 1
                 versionName "1.0"
             }
@@ -86,30 +86,18 @@ jobs:
                 }
             }
             compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
+                sourceCompatibility JavaVersion.VERSION_11
+                targetCompatibility JavaVersion.VERSION_11
             }
             kotlinOptions {
-                jvmTarget = '17'
-            }
-            buildFeatures {
-                compose true
-            }
-            composeOptions {
-                kotlinCompilerExtensionVersion '1.4.7'
+                jvmTarget = '11'
             }
         }
 
         dependencies {
-            implementation 'androidx.core:core-ktx:1.12.0'
-            implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-            implementation 'androidx.activity:activity-compose:1.8.2'
-            implementation platform('androidx.compose:compose-bom:2023.08.00')
-            implementation 'androidx.compose.ui:ui'
-            implementation 'androidx.compose.ui:ui-graphics'
-            implementation 'androidx.compose.ui:ui-tooling-preview'
-            implementation 'androidx.compose.material3:material3'
-            implementation 'androidx.room:room-runtime:2.6.1'
+            implementation 'androidx.core:core-ktx:1.9.0'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.8.0'
         }
         EOF
 
@@ -121,7 +109,7 @@ jobs:
                 android:allowBackup="true"
                 android:label="UpgradeHub"
                 android:supportsRtl="true"
-                android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+                android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
                 <activity
                     android:name=".MainActivity"
                     android:exported="true">
@@ -136,11 +124,8 @@ jobs:
 
         echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
 
-    - name: Build Debug APK with Gradle 8.0
-      run: |
-        gradle wrapper --gradle-version 8.0
-        chmod +x gradlew
-        ./gradlew assembleDebug
+        # 8. Build using gradle directly without wrapper generation
+        gradle assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
