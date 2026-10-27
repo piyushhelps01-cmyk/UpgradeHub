@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // These claims must be issued by trusted Firebase Admin SDK code.
+    // A normal ID-token role field, profile document, or email address is not authority.
+    function isMfaAdmin() {
+      return isAuthenticated()
+        && request.auth.token.admin == true
+        && request.auth.token.firebase.sign_in_second_factor != null;
+    }
+
+    // Student records need a separate least-privilege claim in addition to admin access.
+    function canViewStudentData() {
+      return isMfaAdmin()
+        && request.auth.token.can_view_student_data == true;
+    }
+
+    function hasNoPrivilegedProfileFields() {
+      return !request.resource.data.keys().hasAny([
+        'role',
+        'admin',
+        'isAdmin',
+        'permissions',
+        'can_view_student_data'
+      ]);
+    }
+
+    function doesNotChangePrivilegedProfileFields() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'role',
+        'admin',
+        'isAdmin',
+        'permissions',
+        'can_view_student_data'
+      ]);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || canViewStudentData();
+      allow create: if isOwner(userId) && hasNoPrivilegedProfileFields();
+      allow update: if isOwner(userId) && doesNotChangePrivilegedProfileFields();
+      allow delete: if isOwner(userId);
+
+      // Personal learning records remain private to their owner, including from admins.
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isMfaAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isMfaAdmin();
+    }
+
+    // Rewards, referrals, study-session timing and staff operations are written
+    // only by trusted Cloud Functions using the Admin SDK. Clients must never
+    // submit their own XP, eligibility, referral status, staff role or audit log.
+    match /referralCodes/{code} {
+      allow read, write: if false;
+    }
+
+    match /referralCodeOwners/{uid} {
+      allow read, write: if false;
+    }
+
+    match /referrals/{uid} {
+      allow read, write: if false;
+    }
+
+    match /referralDailyProgress/{uid}/{path=**} {
+      allow read, write: if false;
+    }
+
+    match /xpWallets/{uid} {
+      allow read, write: if false;
+    }
+
+    match /xpLedger/{uid}/{path=**} {
+      allow read, write: if false;
+    }
+
+    match /xpDailyCaps/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /studySessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    match /studySessionLocks/{uid} {
+      allow read, write: if false;
+    }
+
+    match /callLimits/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /opsEmployees/{uid} {
+      allow read, write: if false;
+    }
+
+    match /opsProjects/{projectId} {
+      allow read, write: if false;
+    }
+
+    match /opsTasks/{taskId} {
+      allow read, write: if false;
+    }
+
+    match /opsTaskReports/{reportId} {
+      allow read, write: if false;
+    }
+
+    match /opsPolicies/{policyId} {
+      allow read, write: if false;
+    }
+
+    match /opsPolicyAcks/{ackId} {
+      allow read, write: if false;
+    }
+
+    match /opsAuditLogs/{logId} {
+      allow read, write: if false;
+    }
+  }
+}

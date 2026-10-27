@@ -1,0 +1,26 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "firestore": [
+    {
+      "database": "ai-studio-android-jee60-11b982b5-b0f6-4dc9-b7c8-face473ba944",
+      "rules": "firestore.rules"
+    }
+  ],
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/ops/**",
+        "destination": "/ops/index.html"
+      }
+    ]
+  }
+}

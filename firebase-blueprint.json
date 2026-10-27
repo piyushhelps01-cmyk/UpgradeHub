@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "User": {
+      "path": "/users/{userId}",
+      "description": "User account profile strictly isolated to the authenticated Google account",
+      "fields": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "targetExam": { "type": "string" },
+        "targetScore": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    },
+    "StudyPlan": {
+      "path": "/users/{userId}/study_plans/{planId}",
+      "description": "Personalized study schedule and target milestones",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "selectedBatch": { "type": "string" },
+        "totalDays": { "type": "number" },
+        "dailyHours": { "type": "number" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    },
+    "StudyLog": {
+      "path": "/users/{userId}/study_logs/{logId}",
+      "description": "Daily logged study hours, chapter progress, and focus records",
+      "fields": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "hours": { "type": "number" },
+        "completedChapters": { "type": "array" },
+        "streakCount": { "type": "number" },
+        "timestamp": { "type": "timestamp" }
+      }
+    },
+    "StudyMaterial": {
+      "path": "/materials/{materialId}",
+      "description": "Official study material uploaded by faculty and admin",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "author": { "type": "string" },
+        "timestamp": { "type": "timestamp" }
+      }
+    },
+    "Announcement": {
+      "path": "/announcements/{announcementId}",
+      "description": "Team and batch announcements broadcast by admin",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "priority": { "type": "string" },
+        "author": { "type": "string" },
+        "timestamp": { "type": "timestamp" }
+      }
+    }
+  }
+}
