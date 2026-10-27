@@ -18,18 +18,19 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android Project Structure
+    - name: Setup Project and Gradle Wrapper
       run: |
-        mkdir -p app/src/main
-        # Sirf Kotlin, Gradle aur XML files ko app folder me bhej rahe hain
-        mv *.kt app/src/main/ 2>/dev/null || true
-        mv *.xml app/src/main/ 2>/dev/null || true
+        mkdir -p app/src/main/java app/src/main/res
+        
+        # Sabhi kotlin aur xml files ko sahi jagah pahuncha rahe hain
+        mv *.kt app/src/main/java/ 2>/dev/null || true
+        mv *.xml app/src/main/res/ 2>/dev/null || true
         mv build.gradle app/ 2>/dev/null || true
-        mv proguard-rules.pro app/ 2>/dev/null || true
-        ls -la app
+        mv settings.gradle . 2>/dev/null || true
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+        # Gradle wrapper apne aap generate karega taaki jar file ki koi dikkat na ho
+        gradle wrapper --gradle-version 8.5
+        chmod +x gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug
