@@ -18,38 +18,49 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Generate Complete Professional Project Structure
+    - name: Setup Project & Repositories
       run: |
-        # 1. Sabhi purane aur kharab folders/files ko saaf kar rahe hain
+        # 1. Clean old junk
         rm -rf gradle gradlew gradlew.bat build.gradle settings.gradle app 2>/dev/null || true
 
-        # 2. Ekdam standard Android Studio project layout bana rahe hain
+        # 2. Create standard Android folders
         mkdir -p app/src/main/java/com/upgradehub/app
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/values
 
-        # 3. Agar root me user ki koi .kt ya .xml files hain toh unhe sahi jagah bhej rahe hain
+        # 3. Move user files safely
         find . -maxdepth 1 -name "*.kt" -exec mv {} app/src/main/java/com/upgradehub/app/ \; 2>/dev/null || true
         find . -maxdepth 1 -name "*.xml" -exec mv {} app/src/main/res/layout/ \; 2>/dev/null || true
 
-        # 4. Root settings.gradle file bana rahe hain
-        echo "include ':app'" > settings.gradle
-
-        # 5. Root build.gradle file bana rahe hain
-        cat << 'EOF' > build.gradle
-        plugins {
-            id 'com.android.application' version '8.2.0' apply false
-            id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+        # 4. Create settings.gradle with proper repositories
+        cat << 'EOF' > settings.gradle
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
         }
-        subprojects {
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
             repositories {
                 google()
                 mavenCentral()
             }
         }
+        rootProject.name = "UpgradeHub"
+        include ':app'
         EOF
 
-        # 6. App-level build.gradle file bana rahe hain
+        # 5. Create root build.gradle
+        cat << 'EOF' > build.gradle
+        plugins {
+            id 'com.android.application' version '8.2.0' apply false
+            id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+        }
+        EOF
+
+        # 6. Create app/build.gradle
         cat << 'EOF' > app/build.gradle
         plugins {
             id 'com.android.application'
@@ -99,11 +110,10 @@ jobs:
             implementation 'androidx.compose.ui:ui-tooling-preview'
             implementation 'androidx.compose.material3:material3'
             implementation 'androidx.room:room-runtime:2.6.1'
-            annotationProcessor 'androidx.room:room-compiler:2.6.1'
         }
         EOF
 
-        # 7. AndroidManifest.xml file generate kar rahe hain taaki manifest missing ka error na aaye
+        # 7. Create AndroidManifest.xml
         cat << 'EOF' > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
             package="com.upgradehub.app">
@@ -124,10 +134,9 @@ jobs:
         </manifest>
         EOF
 
-        # 8. local.properties file generate kar rahe hain
         echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
 
-    - name: Initialize Gradle Wrapper & Build APK
+    - name: Build Debug APK
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
